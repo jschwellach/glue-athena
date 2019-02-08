@@ -3,7 +3,9 @@ import boto3
 CLASSIFIER_CLASSIFICATION = 'my-custom-log-format'
 CLASSIFIER_NAME = 'my-custom-log-format'
 CLASSIFIER_GROKPATTERN = '%{MYLOGFORMAT}'
-MYLOGFORMAT = "MYLOGFORMAT %{IPORHOST:clientip} - %{USER:ident} %{USER:auth}"
+MYLOGFORMAT = '''
+MYLOGFORMAT %{IPORHOST:clientip} - %{USER:ident} %{USER:auth} \[%{TIMESTAMP_ISO8601:timestamp}\] "(?:%{WORD:verb} %{NOTSPACE:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{Bytes:bytes=%{NUMBER}|-}) %{QS:referrer} %{QS:agent}
+'''
 
 CRAWLER_NAME = 'my-custom-log-crawler'
 CRAWLER_IAM_ROLE = 'service-role/AWSGlueServiceRole-js-logs-example'
