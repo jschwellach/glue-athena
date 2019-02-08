@@ -2,6 +2,7 @@ import boto3
 
 CLASSIFIER_CLASSIFICATION = 'my-custom-log-format'
 CLASSIFIER_NAME = 'my-custom-log-format'
+CLASSIFIER_GROKPATTERN = '${MYLOGFORMAT}'
 MYLOGFORMAT = "MYLOGFORMAT %{IPORHOST:clientip} - %{USER:ident} %{USER:auth}"
 
 CRAWLER_NAME = 'my-custom-log-crawler'
@@ -31,7 +32,7 @@ def create_classifier():
         GrokClassifier={
             'Classification': CLASSIFIER_CLASSIFICATION,
             'Name': CLASSIFIER_NAME,
-            'GrokPattern': 'MYLOGFORMAT',
+            'GrokPattern': CLASSIFIER_GROKPATTERN,
             'CustomPatterns': MYLOGFORMAT
         }
     )
@@ -41,7 +42,7 @@ def update_classifier():
         GrokClassifier={
             'Classification': CLASSIFIER_CLASSIFICATION,
             'Name': CLASSIFIER_NAME,
-            'GrokPattern': 'MYLOGFORMAT',
+            'GrokPattern': CLASSIFIER_GROKPATTERN,
             'CustomPatterns': MYLOGFORMAT
         }
     )
