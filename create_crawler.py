@@ -2,7 +2,7 @@ import boto3
 
 CLASSIFIER_CLASSIFICATION = 'my-custom-log-format'
 CLASSIFIER_NAME = 'my-custom-log-format'
-CLASSIFIER_GROKPATTERN = '${MYLOGFORMAT}'
+CLASSIFIER_GROKPATTERN = '%{MYLOGFORMAT}'
 MYLOGFORMAT = "MYLOGFORMAT %{IPORHOST:clientip} - %{USER:ident} %{USER:auth}"
 
 CRAWLER_NAME = 'my-custom-log-crawler'
