@@ -5,6 +5,7 @@
 #
 
 import boto3
+import json
 
 # change the variables according to your needs
 
@@ -24,15 +25,22 @@ MYLOGFORMAT = '''
 MYLOGFORMAT %{IPORHOST:clientip} - %{USER:ident} %{USER:auth} \[%{TIMESTAMP_ISO8601:timestamp}\] "(?:%{WORD:verb} %{NOTSPACE:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{Bytes:bytes=%{NUMBER}|-}) %{QS:referrer} %{QS:agent}
 '''
 
+SECONDFORMAT = '''
+SECONDFORMAT %{GREEDYDATA:data}
+'''
+
 client = boto3.client('glue')
 
 def list_classifiers():
-    response = client.get_classifier(Name='my-custom-format')
-    print('response: %s' % response)
-
-def check_if_classifier_exists():
     try:
-        response = client.get_classifier(Name=CLASSIFIER_NAME)
+        response = client.get_classifier(Name='my-custom-format')
+        print('response: %s' % response)
+    except Exception:
+        return ""
+
+def check_if_classifier_exists(name):
+    try:
+        response = client.get_classifier(Name=name)
         print('response %s' % response)
         if response:
             return True
@@ -42,40 +50,67 @@ def check_if_classifier_exists():
 
 
 def create_classifier():
-    client.create_classifier(
-        GrokClassifier={
-            'Classification': CLASSIFIER_CLASSIFICATION,
-            'Name': CLASSIFIER_NAME,
-            'GrokPattern': CLASSIFIER_GROKPATTERN,
-            'CustomPatterns': MYLOGFORMAT
+    if check_if_classifier_exists(CLASSIFIER_NAME):
+        params = {
+            'CLASSIFICATION': CLASSIFIER_CLASSIFICATION,
+            'NAME': CLASSIFIER_NAME,
+            'GROKPATTERN': CLASSIFIER_GROKPATTERN,
+            'LOGFORMAT': MYLOGFORMAT
         }
-    )
+        update_classifier(params)
+    else:
+        client.create_classifier(
+            GrokClassifier={
+                'Classification': CLASSIFIER_CLASSIFICATION,
+                'Name': CLASSIFIER_NAME,
+                'GrokPattern': CLASSIFIER_GROKPATTERN,
+                'CustomPatterns': MYLOGFORMAT
+            }
+        )
+    if check_if_classifier_exists('second-format'):
+        params = {
+            'CLASSIFICATION': 'second-format',
+            'NAME': 'second-format',
+            'GROKPATTERN': '%{SECONDFORMAT}',
+            'LOGFORMAT': SECONDFORMAT
+        }
+        update_classifier(params)
+    else:
+        client.create_classifier(
+            GrokClassifier={
+                'Classification': 'second-format',
+                'Name': 'second-format',
+                'GrokPattern': '%{SECONDFORMAT}',
+                'CustomPatterns': SECONDFORMAT
+            }
+        )
 
-def update_classifier():
+def update_classifier(params):
     client.update_classifier(
         GrokClassifier={
-            'Classification': CLASSIFIER_CLASSIFICATION,
-            'Name': CLASSIFIER_NAME,
-            'GrokPattern': CLASSIFIER_GROKPATTERN,
-            'CustomPatterns': MYLOGFORMAT
+            'Classification': params['CLASSIFICATION'],
+            'Name': params['NAME'],
+            'GrokPattern': params['GROKPATTERN'],
+            'CustomPatterns': params['LOGFORMAT']
         }
     )
-
-def create_or_update_classifier():
-    if check_if_classifier_exists():
-        update_classifier()
-    else:
-        create_classifier()
 
 
 def create_crawler():
     try:
-        client.get_crawler(Name=CRAWLER_NAME)
+        response = client.get_crawler(Name=CRAWLER_NAME)
+        print("response %s" % response)
         print("crawler already exist, deleting it...")
         client.delete_crawler(Name=CRAWLER_NAME)
     except Exception:
         print("crawler doesn't exist")
     print('creating crawler')
+    configuration = {
+        "Version": 1.0,
+        "Grouping": {
+            "TableGroupingPolicy": "CombineCompatibleSchemas"
+        }
+    }
     client.create_crawler(
         Name=CRAWLER_NAME,
         Role=CRAWLER_IAM_ROLE,
@@ -89,8 +124,10 @@ def create_crawler():
             ]
         },
         Classifiers=[
-            CLASSIFIER_NAME
-        ]
+            CLASSIFIER_NAME,
+            'second-format'
+        ],
+        Configuration=json.dumps(configuration)
     )
 
 def start_crawler():
@@ -99,7 +136,7 @@ def start_crawler():
 
 def main():
     list_classifiers()
-    create_or_update_classifier()
+    create_classifier()
     create_crawler()
     start_crawler()
 
