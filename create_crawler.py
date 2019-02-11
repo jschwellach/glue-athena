@@ -1,16 +1,22 @@
 import boto3
 
+# change the variables according to your needs
+
 CLASSIFIER_CLASSIFICATION = 'my-custom-log-format'
 CLASSIFIER_NAME = 'my-custom-log-format'
 CLASSIFIER_GROKPATTERN = '%{MYLOGFORMAT}'
+CRAWLER_NAME = 'my-custom-log-crawler'
+# Change it to your service-role
+CRAWLER_IAM_ROLE = 'service-role/AWSGlueServiceRole-js-logs-example'
+# Change it to your database in glue/athena
+CRAWLER_DATABASE_NAME = 'my-logs'
+# Change it to your S3 bucket
+CRAWLER_S3_TARGET_PATH = 's3://js-example-logs/source/custom'
+
+# Custom log format
 MYLOGFORMAT = '''
 MYLOGFORMAT %{IPORHOST:clientip} - %{USER:ident} %{USER:auth} \[%{TIMESTAMP_ISO8601:timestamp}\] "(?:%{WORD:verb} %{NOTSPACE:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{Bytes:bytes=%{NUMBER}|-}) %{QS:referrer} %{QS:agent}
 '''
-
-CRAWLER_NAME = 'my-custom-log-crawler'
-CRAWLER_IAM_ROLE = 'service-role/AWSGlueServiceRole-js-logs-example'
-CRAWLER_DATABASE_NAME = 'my-logs'
-CRAWLER_S3_TARGET_PATH = 's3://js-example-logs/source/custom'
 
 client = boto3.client('glue')
 
