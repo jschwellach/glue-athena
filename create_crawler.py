@@ -119,7 +119,9 @@ def create_crawler():
             'S3Targets': [
                 {
                     'Path': CRAWLER_S3_TARGET_PATH,
-                    'Exclusions': []
+                    'Exclusions': [
+                        "**/*.err.gz"
+                    ]
                 }
             ]
         },
